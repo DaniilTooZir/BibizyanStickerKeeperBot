@@ -8,6 +8,7 @@ using Telegram.Bot.Polling;
 using Telegram.Bot.Types;
 using Telegram.Bot.Types.Enums;
 using Telegram.Bot.Types.InlineQueryResults;
+using Telegram.Bot.Types.ReplyMarkups;
 
 using StickerKeeperBot.Services;
 using StickerKeeperBot.Data;
@@ -48,13 +49,16 @@ namespace StickerKeeperBot.Services
                 await HandleMessage(bot, update.Message, ct);
             else if (update.Type == UpdateType.InlineQuery && update.InlineQuery != null)
                 await HandleInlineQuery(bot, update.InlineQuery, ct);
+            else if (update.Type == UpdateType.CallbackQuery && update.CallbackQuery != null)
+                await HandleCallbackQuery(bot, update.CallbackQuery, ct);
         }
 
         private async Task HandleMessage(ITelegramBotClient bot, Message message, CancellationToken ct)
         {
+            if (message.Text == null) return;
             if (message.Text != null && message.Text.StartsWith("/add") && message.ReplyToMessage?.Sticker != null)
             {
-                string command = message.Text.Length > 5 ? message.Text.Substring(5).Trim(): "";
+                string command = message.Text.Length > 5 ? message.Text.Substring(5).Trim() : "";
                 string[] parts = command.Split('|', 2);
                 if (parts.Length < 2)
                 {
@@ -72,6 +76,28 @@ namespace StickerKeeperBot.Services
                 await bot.SendMessage(
                     chatId: message.Chat,
                     text: $"Стикер \"{name}\" добавлен в категорию \"{category}\"",
+                    cancellationToken: ct);
+            }
+            else if (message.Text == "/menu")
+            {
+                var inlineKeyboard = new InlineKeyboardMarkup(new[]
+                {
+                    new[]
+                    {
+                        InlineKeyboardButton.WithCallbackData("Добавить стикер", "menu_add"),
+                        InlineKeyboardButton.WithCallbackData("Поиск", "menu_search"),
+
+                    },
+                    new[]
+                    {
+                        InlineKeyboardButton.WithUrl("GitHub", "https://github.com/DaniilTooZir/BibizyanStickerKeeperBot.git")
+                    }
+                });
+
+                await bot.SendMessage(
+                    chatId: message.Chat,
+                    text: "Выберите действия",
+                    replyMarkup: inlineKeyboard,
                     cancellationToken: ct);
             }
         }
@@ -95,6 +121,17 @@ namespace StickerKeeperBot.Services
                 cancellationToken: ct);
         }
 
+        private async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery query, CancellationToken ct)
+        {
+            if (query.Data == "menu_add")
+            {
+                await bot.AnswerCallbackQuery(query.Id, "Чтобы добавить стикер, используй команду: /add <название> | <категория>", cancellationToken: ct);
+            }
+            else if (query.Data == "menu_search")
+            {
+                await bot.AnswerCallbackQuery(query.Id, "Используй inline-запрос: напиши @ИмяБота <ключевое слово>", cancellationToken: ct);
+            }
+        }
         private Task HandleErrorAsync(ITelegramBotClient bot, Exception ex, CancellationToken ct)
         {
             Console.WriteLine($"Ошибка: {ex.Message}");
