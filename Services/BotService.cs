@@ -86,18 +86,52 @@ namespace StickerKeeperBot.Services
                     {
                         InlineKeyboardButton.WithCallbackData("Добавить стикер", "menu_add"),
                         InlineKeyboardButton.WithCallbackData("Поиск", "menu_search"),
-
                     },
                     new[]
                     {
                         InlineKeyboardButton.WithUrl("GitHub", "https://github.com/DaniilTooZir/BibizyanStickerKeeperBot.git")
                     }
                 });
+                var replyKeyboard = new ReplyKeyboardMarkup(new[]
+                {
+                    new KeyboardButton[] { "Добавить стикер", "Поиск" },
+                    new KeyboardButton[] { "Категории" }
+                })
+                {
+                    ResizeKeyboard = true
+                };
+
+                await bot.SendMessage(
+                    chatId: message.Chat,
+                    text: "Выберите действие:",
+                    replyMarkup: replyKeyboard,
+                    cancellationToken: ct);
 
                 await bot.SendMessage(
                     chatId: message.Chat,
                     text: "Выберите действия",
                     replyMarkup: inlineKeyboard,
+                    cancellationToken: ct);
+            }
+            else if (message.Text == "Добавить стикер")
+            {
+                await bot.SendMessage(
+                    chatId: message.Chat,
+                    text: "Чтобы добавить стикер, используй команду: /add <название> | <категория> ответом на стикер",
+                    cancellationToken: ct);
+            }
+            else if (message.Text == "Поиск")
+            {
+                await bot.SendMessage(
+                    chatId: message.Chat,
+                    text: "Напиши слово для поиска, или используй inline-запрос: @ИмяБота <ключевое слово>",
+                    cancellationToken: ct);
+            }
+            else if (message.Text == "Категории")
+            {
+                await bot.SendMessage(
+                    chatId: message.Chat,
+                    text: "Список категорий будет здесь скоро ",
                     cancellationToken: ct);
             }
         }
