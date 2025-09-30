@@ -38,6 +38,24 @@ namespace StickerKeeperBot.Services
                 AllowedUpdates = Array.Empty<UpdateType>()
             };
             _bot.StartReceiving(HandleUpdateAsync, HandleErrorAsync, receiverOptions, cts.Token);
+            _bot.SetMyCommands(new[]
+            {
+                new Telegram.Bot.Types.BotCommand
+                {
+                    Command = "/menu",
+                    Description = "Вызвать меню"
+                },
+                new Telegram.Bot.Types.BotCommand
+                {
+                    Command = "/add",
+                    Description = "Добавить стикор"
+                },
+                new Telegram.Bot.Types.BotCommand
+                {
+                    Command = "/search",
+                    Description = "Поиск стикоров"
+                }
+            }).Wait();
             Console.WriteLine("Бот запущен. Нажми Enter для выхода...");
             Console.ReadLine();
             cts.Cancel();
