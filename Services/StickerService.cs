@@ -17,12 +17,13 @@ namespace StickerKeeperBot.Services
         {
             _db = db;
         }
-        public async Task AddSticker(string name, string fileId)
+        public async Task AddSticker(string name, string fileId, string category)
         {
             var sticker = new Sticker
             {
                 Name = name,
-                FileId = fileId
+                FileId = fileId,
+                Category = category
             };
             await _db.Client.From<Sticker>().Insert(sticker);
         }
@@ -33,6 +34,14 @@ namespace StickerKeeperBot.Services
                 .Filter("name", Operator.ILike, $"%{query}%")
                 .Get();
             return response.Models;
+        }
+        public async Task<List<Sticker>> GetStickerByCategory(string category)
+        {
+            var reponse = await _db.Client
+                .From<Sticker>()
+                .Filter("category", Operator.ILike, category)
+                .Get();
+            return reponse.Models;
         }
     }
 }

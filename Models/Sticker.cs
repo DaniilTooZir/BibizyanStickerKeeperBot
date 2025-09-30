@@ -17,5 +17,7 @@ namespace StickerKeeperBot.Models
         public string Name { get; set; }
         [Column("file_id")]
         public string FileId { get; set; }
+        [Column("category")]
+        public string Category { get; set; }
     }
 }

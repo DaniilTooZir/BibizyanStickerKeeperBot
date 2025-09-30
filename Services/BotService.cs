@@ -54,22 +54,23 @@ namespace StickerKeeperBot.Services
         {
             if (message.Text != null && message.Text.StartsWith("/add") && message.ReplyToMessage?.Sticker != null)
             {
-                string[] parts = message.Text.Split(' ', 2);
-                if (parts.Length < 2)
+                string[] parts = message.Text.Split(' ', 3);
+                if (parts.Length < 3)
                 {
                     await bot.SendMessage(
                         chatId: message.Chat,
-                        text: "Используй: /add <название> (ответом на стикер)",
+                        text: "Используй: /add <название> <категория> (ответом на стикер)",
                         cancellationToken: ct);
                     return;
                 }
 
                 string name = parts[1];
+                string category = parts[2];
                 string fileId = message.ReplyToMessage.Sticker.FileId;
-                await _stickerService.AddSticker(name, fileId);
+                await _stickerService.AddSticker(name, fileId, category);
                 await bot.SendMessage(
                     chatId: message.Chat,
-                    text: $"Стикер \"{name}\" добавлен",
+                    text: $"Стикер \"{name}\" добавлен в категорию \"{category}\"",
                     cancellationToken: ct);
             }
         }
