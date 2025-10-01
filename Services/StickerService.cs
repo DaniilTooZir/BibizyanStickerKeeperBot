@@ -29,9 +29,11 @@ namespace StickerKeeperBot.Services
         }
         public async Task<List<Sticker>> SearchStickers(string query)
         {
+            if (string.IsNullOrWhiteSpace(query))
+                return new List<Sticker>();
             var response = await _db.Client
                 .From<Sticker>()
-                .Filter("name", Operator.ILike, $"%{query}%")
+                .Where(s => s.Name.Contains(query) ||  s.Category.Contains(query))
                 .Get();
             return response.Models;
         }
