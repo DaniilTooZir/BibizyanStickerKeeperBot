@@ -157,20 +157,83 @@ namespace StickerKeeperBot.Services
         private async Task HandleInlineQuery(ITelegramBotClient bot, InlineQuery query, CancellationToken ct)
         {
             var results = new List<InlineQueryResult>();
-            var stickers = await _stickerService.SearchStickers(query.Query);
-            foreach (var s in stickers)
+            try
             {
-                results.Add(new InlineQueryResultCachedSticker(
-                    id: s.Id.ToString(),
-                    stickerFileId: s.FileId
-                ));
+                if (string.IsNullOrWhiteSpace(query.Query))
+                {
+                    var categories = await _stickerService.GetCategories();
+                    const int perCategory = 3;
+                    foreach (var category in categories)
+                    {
+                        var stickersInCat = await _stickerService.GetStickerByCategory(category);
+                        if (stickersInCat == null || !stickersInCat.Any())
+                            continue;
+                        foreach (var s in stickersInCat.Take(perCategory))
+                        {
+                            results.Add(new InlineQueryResultCachedSticker(
+                                id: $"{s.Id}",
+                                stickerFileId: s.FileId
+                            ));
+                        }
+                    }
+                    if (!results.Any())
+                    {
+                        results.Add(new InlineQueryResultArticle(
+                            id: "empty",
+                            title: "Стикеры не найдены",
+                            inputMessageContent: new InputTextMessageContent("В хранилище пока нет стикеров.")
+                        ));
+                    }
+                }
+                else
+                {
+                    var stickersByCategory = await _stickerService.GetStickerByCategory(query.Query);
+                    if (stickersByCategory != null && stickersByCategory.Any())
+                    {
+                        foreach (var s in stickersByCategory)
+                        {
+                            results.Add(new InlineQueryResultCachedSticker(
+                                id: s.Id.ToString(),
+                                stickerFileId: s.FileId
+                            ));
+                        }
+                    }
+                    else
+                    {
+                        var stickers = await _stickerService.SearchStickers(query.Query);
+                        foreach (var s in stickers)
+                        {
+                            results.Add(new InlineQueryResultCachedSticker(
+                                id: s.Id.ToString(),
+                                stickerFileId: s.FileId
+                            ));
+                        }
+                    }
+                    if (!results.Any())
+                    {
+                        results.Add(new InlineQueryResultArticle(
+                            id: "notfound",
+                            title: "Ничего не найдено",
+                            inputMessageContent: new InputTextMessageContent("Ничего не найдено по запросу.")
+                        ));
+                    }
+                }
+                await bot.AnswerInlineQuery(
+                    inlineQueryId: query.Id,
+                    results: results,
+                    isPersonal: true,
+                    cacheTime: 10,
+                    cancellationToken: ct);
             }
-            await bot.AnswerInlineQuery(
-                inlineQueryId: query.Id,
-                results: results,
-                isPersonal: true,
-                cacheTime: 0,
-                cancellationToken: ct);
+            catch (Exception ex)
+            {
+                Console.WriteLine($"HandleInlineQuery error: {ex.Message}");
+                try
+                {
+                    await bot.AnswerInlineQuery(inlineQueryId: query.Id, results: new List<InlineQueryResult>(), isPersonal: true, cacheTime: 1, cancellationToken: ct);
+                }
+                catch {}
+            }
         }
 
         private async Task HandleCallbackQuery(ITelegramBotClient bot, CallbackQuery query, CancellationToken ct)

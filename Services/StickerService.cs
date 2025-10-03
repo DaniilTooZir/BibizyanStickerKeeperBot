@@ -37,6 +37,17 @@ namespace StickerKeeperBot.Services
                 .Get();
             return response.Models;
         }
+        public async Task<List<string>> GetCategories()
+        {
+            var response = await _db.Client
+                .From<Sticker>()
+                .Select("category")
+                .Get();
+            return response.Models
+                .Select(s => s.Category)
+                .Distinct()
+                .ToList();
+        }
         public async Task<List<Sticker>> GetStickerByCategory(string category)
         {
             var reponse = await _db.Client
